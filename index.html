@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ideográfica Pro - Asociación Microtia QRoo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        :root { 
+            --bg: #e0f2f1; --card: #ffffff; --text: #2c3e50; 
+            --accent: #0097a7; --ui-text: #2c3e50; --donate: #e91e63;
+        }
+        
+        body.mode-day { --bg: #e0f2f1; --card: #ffffff; --text: #2c3e50; }
+        body.mode-sepia { --bg: #f4ecd8; --card: #fdf6e3; --text: #5b4636; }
+        body.mode-warm { --bg: #fff3e0; --card: #fff9f0; --text: #4e342e; }
+        body.mode-dark { --bg: #1a1a1a; --card: #2d2d2d; --text: #e0e0e0; --accent: #4dd0e1; }
+
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; text-align: center; transition: 0.3s; }
+        
+        /* Modal de Deslinde */
+        #legal-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: #fff; padding: 30px; border-radius: 25px; max-width: 500px; border: 3px solid var(--accent); color: #2c3e50; box-shadow: 0 15px 50px rgba(0,0,0,0.5); }
+
+        #main-app { display: none; max-width: 800px; margin: 0 auto; }
+        #reader-view { display: none; }
+
+        /* Área de Lectura */
+        #display-area { 
+            background: var(--card); width: 100%; height: 320px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border-radius: 30px; font-weight: bold; font-size: clamp(2rem, 10vw, 4.2rem);
+            position: relative; border: 1px solid rgba(0,0,0,0.1); margin: 20px 0; overflow: hidden;
+        }
+        .pivot { color: var(--accent); }
+        #progress-bar { position: absolute; bottom: 0; left: 0; height: 10px; background: var(--accent); width: 0%; transition: 0.2s; }
+
+        .card { background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .donate-box { border: 2px dashed var(--donate); padding: 25px; border-radius: 25px; margin: 25px 0; background: var(--card); }
+        
+        button { background: var(--accent); color: white; border: none; padding: 14px 22px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 1rem; }
+        button:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .btn-sec { background: #cfd8dc; color: #455a64; }
+        .btn-del { background: #ffebee; color: #d32f2f; padding: 8px 12px; font-size: 1.1rem; border: 1px solid #ffcdd2; }
+        .btn-del:hover { background: #d32f2f; color: white; }
+        .btn-light { background: #fff; color: #333; border: 1px solid #ddd; padding: 8px 12px; font-size: 0.8rem; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stats { font-size: 0.95rem; font-weight: bold; color: var(--accent); }
+        footer { margin-top: 50px; font-size: 0.85rem; opacity: 0.8; line-height: 1.6; }
+        .web-link { color: var(--accent); text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body class="mode-day">
+
+    <div id="legal-modal">
+        <div class="modal-content">
+            <h2 style="color:var(--accent); margin-top:0;">✨ Bienvenido a Ideográfica Pro</h2>
+            <p style="font-size: 1.05rem;">Esta herramienta es propiedad de la <b>Asociación Microtia Quintana Roo</b>.</p>
+            <p style="text-align: justify; font-size: 0.9rem; color: #555; background: #f9f9f9; padding: 15px; border-radius: 15px;">
+                <b>Aviso Legal:</b> El usuario es el único responsable legal del contenido de los archivos que cargue. La asociación no almacena ni se hace responsable del material procesado.
+            </p>
+            <p>Tu uso ayuda a nuestra causa de <b>apoyar a niños con discapacidad auditiva</b>.</p>
+            <button onclick="unlockApp()" style="width: 100%; padding: 18px; font-size: 1.2rem;">ACEPTAR Y ENTRAR</button>
+        </div>
+    </div>
+
+    <div id="main-app">
+        <div id="library-view">
+            <h1 style="color:var(--accent)">📚 Mi Biblioteca</h1>
+            
+            <div class="donate-box">
+                <h3 style="color:var(--donate); margin:0;">💙 Dona y ayuda a un niño con discapacidad auditiva</h3>
+                <p style="font-size: 0.9rem; margin: 10px 0;">Si esta herramienta te es útil, ayúdanos a seguir transformando vidas.</p>
+                <button onclick="window.open('https://www.paypal.com/paypalme/asociacionmicrotia')" style="background:var(--donate); width:100%; font-size: 1.1rem;">APOYAR POR PAYPAL</button>
+            </div>
+
+            <div class="card">
+                <p style="margin-top:0;"><b>Cargar nuevo libro (PDF o TXT):</b></p>
+                <input type="file" id="file-input" accept=".pdf,.txt" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
+            </div>
+
+            <div id="books-list"></div>
+        </div>
+
+        <div id="reader-view">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <button class="btn-sec" onclick="goHome()">⬅ Biblioteca</button>
+                <div class="stats">
+                    <span id="page-num">Página: 1</span> | <span id="percent-num">0%</span>
+                </div>
+            </div>
+
+            <div id="display-area">
+                <div id="word-box">LISTO</div>
+                <div id="progress-bar"></div>
+            </div>
+
+            <div class="grid">
+                <button onclick="togglePlay()" id="play-pause-btn" style="grid-column: span 2; background:#009688; font-size: 1.4rem;">▶ INICIAR</button>
+                <button class="btn-sec" onclick="skip()">⏭ +1 PÁG.</button>
+                <button class="btn-sec" onclick="rewind()">⏪ -20 PAL.</button>
+            </div>
+
+            <div class="card" style="margin-top:20px;">
+                <p style="margin-top:0;"><b>Opciones de Iluminación:</b></p>
+                <div style="display:flex; gap:8px; justify-content:center; flex-wrap: wrap;">
+                    <button class="btn-light" onclick="setMode('day')">⚪ Día</button>
+                    <button class="btn-light" onclick="setMode('sepia')" style="background:#f4ecd8">🟡 Sepia</button>
+                    <button class="btn-light" onclick="setMode('warm')" style="background:#fff3e0">🟠 Cálido</button>
+                    <button class="btn-light" onclick="setMode('dark')" style="background:#333; color:#fff">⚫ Noche</button>
+                </div>
+                <p style="margin-bottom:0; margin-top:15px;"><b>Velocidad (PPM):</b> 
+                    <input type="number" id="wpm" value="300" step="50" style="width:70px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+                </p>
+            </div>
+        </div>
+
+        <footer>
+            Para saber más de nuestra labor visítanos en:<br>
+            <a href="http://www.asociacionmicrotia.com" target="_blank" class="web-link">www.asociacionmicrotia.com</a><br>
+            © 2026 Asociación Microtia Quintana Roo
+        </footer>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        let timer = null, words = [], idx = 0, currentId = null;
+        let library = JSON.parse(localStorage.getItem('lib_v10')) || [];
+
+        function unlockApp() {
+            localStorage.setItem('accepted_v10', 'true');
+            const modal = document.getElementById('legal-modal');
+            if(modal) modal.remove(); 
+            document.getElementById('main-app').style.display = 'block';
+            renderLib();
+        }
+
+        function setMode(mode) { document.body.className = 'mode-' + mode; }
+
+        function togglePlay() {
+            const btn = document.getElementById('play-pause-btn');
+            if (timer) {
+                pause();
+                btn.innerText = "▶ REANUDAR";
+                btn.style.background = "#009688";
+            } else {
+                start();
+                btn.innerText = "⏸ PAUSAR";
+                btn.style.background = "#e91e63";
+            }
+        }
+
+        function start() {
+            const bk = library.find(x => x.id === currentId);
+            if(!bk) return;
+            words = bk.content.trim().split(/\s+/);
+            const speed = 60000 / document.getElementById('wpm').value;
+            timer = setInterval(() => {
+                if(idx < words.length) {
+                    document.getElementById('word-box').innerHTML = format(words[idx]);
+                    idx++;
+                    updateUI();
+                } else { pause(); document.getElementById('play-pause-btn').innerText = "▶ INICIAR"; }
+            }, speed);
+        }
+
+        function pause() { clearInterval(timer); timer = null; save(); }
+        
+        function format(w) {
+            if(!w) return '';
+            let p = Math.ceil(w.length * 0.35);
+            if(w.length <= 3) p = Math.floor(w.length / 2);
+            return `${w.slice(0, p)}<span class="pivot">${(w[p] || '')}</span>${w.slice(p + 1)}`;
+        }
+
+        function goHome() { pause(); document.getElementById('reader-view').style.display='none'; document.getElementById('library-view').style.display='block'; renderLib(); }
+        function skip() { pause(); idx = Math.min(words.length - 1, idx + 300); updateUI(); document.getElementById('play-pause-btn').innerText = "▶ REANUDAR"; }
+        function rewind() { pause(); idx = Math.max(0, idx - 20); updateUI(); document.getElementById('play-pause-btn').innerText = "▶ REANUDAR"; }
+
+        function updateUI() {
+            if(!words.length) return;
+            const p = Math.min(Math.round((idx / words.length) * 100), 100);
+            document.getElementById('progress-bar').style.width = p + "%";
+            document.getElementById('percent-num').innerText = p + "%";
+            document.getElementById('page-num').innerText = "Página: " + (Math.floor(idx / 300) + 1);
+        }
+
+        function save() {
+            const bk = library.find(x => x.id === currentId);
+            if(bk) { bk.last = idx; localStorage.setItem('lib_v10', JSON.stringify(library)); }
+        }
+
+        // FUNCIÓN DE PAPELERA (ELIMINAR)
+        function deleteBook(id) {
+            if(confirm("¿Seguro que quieres eliminar este libro y su historial de lectura?")) {
+                library = library.filter(b => b.id !== id);
+                localStorage.setItem('lib_v10', JSON.stringify(library));
+                renderLib();
+            }
+        }
+
+        function renderLib() {
+            const container = document.getElementById('books-list');
+            if(library.length === 0) { 
+                container.innerHTML = "<p style='opacity:0.6; margin-top:20px;'>No hay libros cargados.</p>"; 
+                return; 
+            }
+            container.innerHTML = library.map(b => `
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:12px">
+                    <div style="text-align:left; max-width:60%">
+                        <div style="font-size:0.9rem; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${b.title}</div>
+                        <div style="font-size:0.75rem; color:var(--accent)">Progreso: ${Math.round((b.last / (b.content.split(/\s+/).length) * 100)) || 0}%</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="openReader(${b.id})" style="padding:8px 15px; font-size:0.8rem">Leer</button>
+                        <button class="btn-del" onclick="deleteBook(${b.id})" title="Eliminar libro">🗑</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openReader(id) {
+            currentId = id;
+            const bk = library.find(x => x.id === id);
+            words = bk.content.trim().split(/\s+/);
+            idx = bk.last || 0;
+            document.getElementById('library-view').style.display = 'none';
+            document.getElementById('reader-view').style.display = 'block';
+            document.getElementById('play-pause-btn').innerText = "▶ INICIAR";
+            updateUI();
+        }
+
+        document.getElementById('file-input').onchange = async (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            let text = "";
+            try {
+                if(file.type === "application/pdf") {
+                    const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+                    for(let i=1; i<=doc.numPages; i++) {
+                        const page = await doc.getPage(i);
+                        const content = await page.getTextContent();
+                        text += content.items.map(s => s.str).join(" ") + " ";
+                    }
+                } else { text = await file.text(); }
+                library.push({ id: Date.now(), title: file.name, content: text, last: 0 });
+                localStorage.setItem('lib_v10', JSON.stringify(library));
+                renderLib();
+                e.target.value = ""; // Limpiar input
+            } catch(e) { alert("Error al cargar el archivo."); }
+        };
+
+        window.onload = () => {
+            if(localStorage.getItem('accepted_v10')) unlockApp();
+        };
+    </script>
+</body>
+</html>
